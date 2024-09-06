@@ -1,0 +1,43 @@
+import subprocess
+
+def get_network_status(interface_name):
+    try:
+        # 获取网络连接状态
+        result = subprocess.run(
+            ["netsh", "interface", "show", "interface"],
+            capture_output=True, text=True, check=True
+        )
+        output = result.stdout
+        print("Debug Output:\n", output)  # 调试输出
+
+        # 查找接口状态行来判断状态
+        for line in output.splitlines():
+            if interface_name in line:
+                if "禁用" in line:
+                    return "Disabled"
+                elif "启用" in line:
+                    return "Enabled"
+        return "Unknown"
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred while checking the network status: {e}")
+        return "Error"
+
+def enable_network_connection(interface_name):
+    status = get_network_status(interface_name)
+    if status == "Disabled":
+        try:
+            # 启用网络连接
+            subprocess.run(
+                ["netsh", "interface", "set", "interface", interface_name, "enable"],
+                check=True
+            )
+            print(f"Network connection '{interface_name}' has been enabled.")
+        except subprocess.CalledProcessError as e:
+            print(f"An error occurred while enabling the network connection: {e}")
+    elif status == "Enabled":
+        print(f"Network connection '{interface_name}' is already enabled.")
+    else:
+        print(f"Unable to determine the status of network connection '{interface_name}'.")
+
+# 使用 '以太网' 作为网络连接名称
+enable_network_connection("以太网")
